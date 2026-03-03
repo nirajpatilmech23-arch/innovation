@@ -1,3 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plantation Dashboard</title>
+
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background-color: #f4fff4;
+    }
+
+    /* Grid layout for real field look */
+    #mapContainer {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 60px);
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .spot {
+      font-size: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🌾 Plantation Monitoring</h2>
+
+<h3>Total Planted: <span id="plantedCount">0</span></h3>
+<h3>Total Empty: <span id="emptyCount">0</span></h3>
+
+<div id="mapContainer"></div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -13,6 +48,7 @@ const database = getDatabase(app);
 
 const mapRef = ref(database, "plant/map");
 
+// 🔥 Continuous Mapping Logic
 onValue(mapRef, (snapshot) => {
 
   const data = snapshot.val() || {};
@@ -21,7 +57,7 @@ onValue(mapRef, (snapshot) => {
 
   let planted = 0;
 
-  // 🔥 Get all positions sorted
+  // Get all mapped positions sorted
   const positions = Object.keys(data)
     .map(Number)
     .sort((a, b) => a - b);
@@ -49,3 +85,6 @@ onValue(mapRef, (snapshot) => {
 });
 
 </script>
+
+</body>
+</html>
