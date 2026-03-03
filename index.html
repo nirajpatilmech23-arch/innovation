@@ -1,35 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Plantation Dashboard</title>
-
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial;
-      background-color: #f4fff4;
-    }
-
-    #mapContainer {
-      margin-top: 40px;
-    }
-
-    .spot {
-      font-size: 50px;
-      margin: 8px;
-      display: inline-block;
-    }
-  </style>
-</head>
-<body>
-
-<h2>🌾 Plantation Monitoring</h2>
-
-<h3>Total Planted: <span id="plantedCount">0</span></h3>
-<h3>Total Empty: <span id="emptyCount">0</span></h3>
-
-<div id="mapContainer"></div>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -44,43 +12,40 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 const mapRef = ref(database, "plant/map");
-const countRef = ref(database, "plant/count");
 
-const totalSpots = 5;   // ⚠ Must match ESP totalSpots
-
-// 🌱 Listen for map updates
 onValue(mapRef, (snapshot) => {
 
   const data = snapshot.val() || {};
   const container = document.getElementById("mapContainer");
   container.innerHTML = "";
 
-  for (let i = 1; i <= totalSpots; i++) {
+  let planted = 0;
+
+  // 🔥 Get all positions sorted
+  const positions = Object.keys(data)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  positions.forEach(pos => {
 
     const span = document.createElement("span");
     span.className = "spot";
 
-    if (data[i] === 1) {
+    if (data[pos] === 1) {
       span.innerHTML = "🌱";
-    } else if (data[i] === 0) {
-      span.innerHTML = "❌";
+      planted++;
     } else {
       span.innerHTML = "❌";
     }
 
     container.appendChild(span);
-  }
-});
+  });
 
-// 📊 Listen for planted count
-onValue(countRef, (snapshot) => {
-  const planted = snapshot.val() || 0;
+  const totalSpots = positions.length;
 
   document.getElementById("plantedCount").innerText = planted;
   document.getElementById("emptyCount").innerText = totalSpots - planted;
+
 });
 
 </script>
-
-</body>
-</html>
