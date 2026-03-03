@@ -1,42 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Plant Growth</title>
-
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+  <title>Plant Trigger Monitor</title>
 
   <style>
     body {
       text-align: center;
       font-family: Arial;
+      background-color: #f4fff4;
     }
 
-    #bubbleContainer {
-      margin-top: 40px;
-    }
-
-    .bubble {
-      width: 50px;
-      height: 50px;
-      background-color: green;
-      border-radius: 50%;
-      display: inline-block;
-      margin: 10px;
-      animation: pop 0.5s ease;
-    }
-
-    @keyframes pop {
-      from { transform: scale(0); }
-      to { transform: scale(1); }
+    #status {
+      font-size: 100px;
+      margin-top: 50px;
+      transition: 0.3s ease;
     }
   </style>
 </head>
 <body>
 
-<h2>🌱 Plant Growth Monitor</h2>
+<h2>🌱 Plant Trigger Monitor</h2>
+<h3>Status:</h3>
 
-<div id="bubbleContainer"></div>
+<div id="status">❌</div>
 
 <script type="module">
 
@@ -50,18 +36,26 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
-const plantRef = ref(database, "plant/count");
+const triggerRef = ref(database, "plant/trigger");
 
-onValue(plantRef, (snapshot) => {
-  const count = snapshot.val() || 0;
-  const container = document.getElementById("bubbleContainer");
-  container.innerHTML = "";
+let timeout;
 
-  for (let i = 0; i < count; i++) {
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    container.appendChild(bubble);
+onValue(triggerRef, (snapshot) => {
+
+  if (snapshot.exists()) {
+
+    // Show plant when triggered
+    document.getElementById("status").innerHTML = "🌱";
+
+    // Clear previous timer
+    clearTimeout(timeout);
+
+    // Start 2 second timer
+    timeout = setTimeout(() => {
+      document.getElementById("status").innerHTML = "❌";
+    }, 2000);
   }
+
 });
 
 </script>
