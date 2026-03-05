@@ -1,37 +1,143 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Plantation Dashboard</title>
 
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial;
-      background-color: #f4fff4;
-    }
+<title>Smart Plantation Monitoring</title>
 
-    /* Grid layout for real field look */
-    #mapContainer {
-      margin-top: 40px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, 60px);
-      gap: 12px;
-      justify-content: center;
-    }
+<style>
 
-    .spot {
-      font-size: 40px;
-    }
-  </style>
+body{
+font-family:Arial;
+text-align:center;
+background:#f4fff4;
+margin:0;
+}
+
+/* WELCOME SCREEN */
+
+#welcome{
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
+
+#tractor{
+font-size:80px;
+animation:move 4s infinite linear;
+}
+
+@keyframes move{
+0%{transform:translateX(-200px)}
+100%{transform:translateX(200px)}
+}
+
+button{
+padding:15px 30px;
+font-size:18px;
+border:none;
+border-radius:8px;
+background:green;
+color:white;
+cursor:pointer;
+}
+
+/* DASHBOARD */
+
+#dashboard{
+display:none;
+padding:20px;
+}
+
+.cards{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+margin-top:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+width:160px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.15);
+}
+
+#mapContainer{
+margin-top:40px;
+display:grid;
+grid-template-columns:repeat(auto-fill,50px);
+gap:10px;
+justify-content:center;
+}
+
+.spot{
+font-size:35px;
+}
+
+#tractorMap{
+font-size:40px;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>🌾 Plantation Monitoring</h2>
+<!-- WELCOME SCREEN -->
 
-<h3>Total Planted: <span id="plantedCount">0</span></h3>
-<h3>Total Empty: <span id="emptyCount">0</span></h3>
+<div id="welcome">
+
+<h1>🚜 Smart Plantation System</h1>
+
+<div id="tractor">🚜🌱🌱🌱</div>
+
+<br>
+
+<button onclick="startSystem()">Start Monitoring</button>
+
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard">
+
+<h1>🌾 Plantation Dashboard</h1>
+
+<div class="cards">
+
+<div class="card">
+<h3>🌱 Planted</h3>
+<h2 id="planted">0</h2>
+</div>
+
+<div class="card">
+<h3>❌ Missed</h3>
+<h2 id="missed">0</h2>
+</div>
+
+<div class="card">
+<h3>🚜 Speed</h3>
+<h2 id="speed">0</h2>
+</div>
+
+<div class="card">
+<h3>📏 Distance</h3>
+<h2 id="distance">0</h2>
+</div>
+
+</div>
+
+<h2>Plantation Map</h2>
 
 <div id="mapContainer"></div>
+
+</div>
 
 <script type="module">
 
@@ -39,48 +145,84 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAzkcg1wzQTo2B7vQdcahtHAM2YBPn9WSY",
-  databaseURL: "planting-77ce1-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+apiKey: "AIzaSyAzkcg1wzQTo2B7vQdcahtHAM2YBPn9WSY",
+databaseURL: "planting-77ce1-default-rtdb.asia-southeast1.firebasedatabase.app"
+
 };
 
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+const db = getDatabase(app);
 
-const mapRef = ref(database, "plant/map");
+/* START BUTTON */
 
-// 🔥 Continuous Mapping Logic
-onValue(mapRef, (snapshot) => {
+window.startSystem = function(){
 
-  const data = snapshot.val() || {};
-  const container = document.getElementById("mapContainer");
-  container.innerHTML = "";
+document.getElementById("welcome").style.display="none";
+document.getElementById("dashboard").style.display="block";
 
-  let planted = 0;
+}
 
-  // Get all mapped positions sorted
-  const positions = Object.keys(data)
-    .map(Number)
-    .sort((a, b) => a - b);
+/* COUNT */
 
-  positions.forEach(pos => {
+onValue(ref(db,"plant/count"),(snap)=>{
+document.getElementById("planted").innerText=snap.val()||0;
+});
 
-    const span = document.createElement("span");
-    span.className = "spot";
+/* MISSED */
 
-    if (data[pos] === 1) {
-      span.innerHTML = "🌱";
-      planted++;
-    } else {
-      span.innerHTML = "❌";
-    }
+onValue(ref(db,"plant/missed"),(snap)=>{
+document.getElementById("missed").innerText=snap.val()||0;
+});
 
-    container.appendChild(span);
-  });
+/* SPEED */
 
-  const totalSpots = positions.length;
+onValue(ref(db,"plant/speed"),(snap)=>{
+document.getElementById("speed").innerText=snap.val()||0;
+});
 
-  document.getElementById("plantedCount").innerText = planted;
-  document.getElementById("emptyCount").innerText = totalSpots - planted;
+/* DISTANCE */
+
+onValue(ref(db,"plant/distance"),(snap)=>{
+document.getElementById("distance").innerText=snap.val()||0;
+});
+
+/* MAP + TRACTOR */
+
+onValue(ref(db,"plant/map"),(snapshot)=>{
+
+const data=snapshot.val()||{};
+const container=document.getElementById("mapContainer");
+
+container.innerHTML="";
+
+const positions=Object.keys(data)
+.map(Number)
+.sort((a,b)=>a-b);
+
+positions.forEach((pos,index)=>{
+
+const span=document.createElement("span");
+span.className="spot";
+
+if(data[pos]==1){
+span.innerHTML="🌱";
+}
+else{
+span.innerHTML="❌";
+}
+
+container.appendChild(span);
+
+});
+
+/* ADD TRACTOR AT END */
+
+const tractor=document.createElement("span");
+tractor.id="tractorMap";
+tractor.innerHTML="🚜";
+
+container.appendChild(tractor);
 
 });
 
